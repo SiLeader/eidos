@@ -56,4 +56,17 @@ class Value : public BytesMessage {
   using BytesMessage::BytesMessage;
 };
 
+template <class RandomAccessIterator>
+std::string BytesToString(const RandomAccessIterator& first,
+                          const RandomAccessIterator& last) {
+  std::string s(last - first, '\0');
+  std::transform(first, last, std::begin(s),
+                 [](std::byte b) { return static_cast<char>(b); });
+  return s;
+}
+
+inline std::string BytesToString(const std::vector<std::byte>& bytes) {
+  return BytesToString(std::begin(bytes), std::end(bytes));
+}
+
 }  // namespace eidos

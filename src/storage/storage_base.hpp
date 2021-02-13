@@ -17,6 +17,8 @@ class StorageEngineBase {
   template <class T>
   using Result = eidos::result::Result<T, std::string>;
 
+  virtual ~StorageEngineBase() = default;
+
  public:
   /// set value to storage
   /// \param key key

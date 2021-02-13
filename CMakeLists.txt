@@ -19,17 +19,17 @@ download_project(
 add_subdirectory(${googletest_SOURCE_DIR} ${googletest_BINARY_DIR})
 
 # Boost
-find_package(Boost REQUIRED COMPONENTS date_time system)
+find_package(Boost REQUIRED COMPONENTS date_time system log program_options)
 
 # eidos
-add_executable(eidos src/main.cc src/storage/storage_base.hpp include/eidos/types.hpp include/eidos/result.hpp src/storage/memstore.hpp src/server.cc src/server.hpp)
+add_executable(eidos src/main.cc src/storage/storage_base.hpp include/eidos/types.hpp include/eidos/result.hpp src/storage/memstore.hpp src/server.cc src/server.hpp src/request.hpp src/context.hpp src/tcp.hpp include/eidos/version.hpp)
 target_include_directories(eidos
         PRIVATE
         "${Boost_INCLUDE_DIRS}"
         "${PROJECT_SOURCE_DIR}/include")
 
 target_link_libraries(eidos
-        Boost::date_time Boost::system)
+        Boost::date_time Boost::system Boost::log Boost::program_options)
 
 # test
 add_executable(e-test test/result.cc src/storage/dirstore.hpp)
