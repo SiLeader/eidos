@@ -45,6 +45,10 @@ class StorageEngineBase {
   /// \param pattern key pattern
   /// \return Result of operation
   virtual Result<std::vector<Key>> keys(const std::string& pattern) = 0;
+
+  /// dump all key value pairs
+  /// \return key value pairs or error
+  virtual Result<std::vector<std::tuple<Key, Value>>> dump() = 0;
 };
 
 }  // namespace eidos::storage

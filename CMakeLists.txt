@@ -21,18 +21,41 @@ add_subdirectory(${googletest_SOURCE_DIR} ${googletest_BINARY_DIR})
 # Boost
 find_package(Boost REQUIRED COMPONENTS date_time system log program_options)
 
+# OpenSSL
+find_package(OpenSSL REQUIRED)
+
+# NuRaft (submodule)
+set(BOOST_INCLUDE_PATH "${Boost_INCLUDE_DIRS}/boost" ${Boost_INCLUDE_DIRS})
+set(BOOST_LIBRARY_PATH ${Boost_LIBRARY_DIRS})
+add_subdirectory(third_party/NuRaft)
+
 # eidos
-add_executable(eidos src/main.cc src/storage/storage_base.hpp include/eidos/types.hpp include/eidos/result.hpp src/storage/memstore.hpp src/server.cc src/server.hpp src/request.hpp src/context.hpp src/tcp.hpp include/eidos/version.hpp)
+add_executable(eidos
+        src/main.cc
+        src/storage/storage_base.hpp
+        include/eidos/types.hpp
+        include/eidos/result.hpp
+        src/storage/memstore.hpp
+        src/server.cc src/server.hpp
+        src/request.hpp
+        src/context.hpp
+        src/tcp.hpp
+        include/eidos/version.hpp
+        src/storage/raft.hpp)
 target_include_directories(eidos
         PRIVATE
         "${Boost_INCLUDE_DIRS}"
-        "${PROJECT_SOURCE_DIR}/include")
+        "${PROJECT_SOURCE_DIR}/include"
+        "${PROJECT_SOURCE_DIR}/third_party/NuRaft/include")
 
 target_link_libraries(eidos
-        Boost::date_time Boost::system Boost::log Boost::program_options)
+        Boost::date_time Boost::system  # ASIO
+        Boost::log Boost::program_options
+        ${OPENSSL_LIBRARIES}
+        static_lib)
 
 # test
-add_executable(e-test test/result.cc src/storage/dirstore.hpp)
+add_executable(e-test test/result.cc src/storage/dirstore.hpp src/storage/raft.hpp)
 target_link_libraries(e-test gtest gmock_main)
 target_include_directories(e-test PRIVATE "${PROJECT_SOURCE_DIR}/include" "${gtest_SOURCE_DIR}/include" "${gmock_SOURCE_DIR}/include")
 add_test(NAME eidos-test COMMAND e-test)

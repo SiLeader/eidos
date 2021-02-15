@@ -26,34 +26,31 @@ inline std::string Version() {
   return ss.str();
 }
 
-inline std::string VersionInfo() {
-  std::stringstream ss;
-  ss << "version: " << Version() << "\n"                       //
+inline void VersionInfo(std::ostream& os) {
+  os << "version: " << Version() << "\n"                       //
      << "built: " << kBuildDate << " " << kBuildTime << "\n";  //
 
   // build system
 #if defined(__clang__)
-  ss << "build: clang " << __clang_version__ << "\n";
+  os << "build: clang " << __clang_version__ << "\n";
 #elif defined(__GNUG__)
-  ss << "build: gcc " << __GNUC__ << "." << __GNUC_MINOR__ << "." << __GNUC_PATCHLEVEL__ << "\n";
+  os << "build: gcc " << __GNUC__ << "." << __GNUC_MINOR__ << "." << __GNUC_PATCHLEVEL__ << "\n";
 #elif defined(_MSC_VER)
-  ss << "build: MSVC " << _MSC_VER << "\n";
+  os << "build: MSVC " << _MSC_VER << "\n";
 #else
-  ss << "build: unknown\n";
+  os << "build: unknown\n";
 #endif
 
   // operating system
 #if defined(__unix__) || defined(__APPLE__)
   ::utsname un = {};
   ::uname(&un);
-  ss << "os: " << un.sysname << " " << un.release << " " << un.machine;
+  os << "os: " << un.sysname << " " << un.release << " " << un.machine;
 #elif defined(_MSV_VER)
-  ss << "os: Windows";
+  os << "os: Windows";
 #else
-  ss << "os: Unknown";
+  os << "os: Unknown";
 #endif
-
-  return ss.str();
 }
 
 }  // namespace eidos::version

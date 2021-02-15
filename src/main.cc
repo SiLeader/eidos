@@ -5,6 +5,7 @@
 
 #include "server.hpp"
 #include "storage/memstore.hpp"
+#include "storage/raft.hpp"
 
 namespace {
 
@@ -20,6 +21,7 @@ void StreamHelp(std::ostream& os, const char* program) {
      << "storage engine\n"                                                  //
      << "  memory    : use program heap memory as data storage.\n"          //
      << "  directory : use directory style engine. (not implemented)\n"     //
+     << "  raft      : use Raft replicated in-memory storage\n"             //
      << "\n"                                                                //
      << "published under Apache License 2.0" << std::endl;
 }
@@ -29,16 +31,15 @@ void StreamHelp(std::ostream& os, const char* program) {
 int main(const int argc, const char* const* const argv) {
   using boost::program_options::value;
   boost::program_options::options_description options("eidos");
-  options.add_options()              // options
-      ("help,h", "show help")        // --help, -h: help
-      ("version,v", "show version")  // --version, -v: version
+  options.add_options()                                             // options
+      ("help,h", "show help")                                       // --help, -h: help
+      ("version,v", "show version")                                 // --version, -v: version
       ("port,p", value<int>()->default_value(6379), "port number")  // port
       ("engine", value<std::string>()->default_value("memory"),
        "storage engine (memory)")  //
       ;
   boost::program_options::variables_map vm;
-  boost::program_options::store(
-      boost::program_options::parse_command_line(argc, argv, options), vm);
+  boost::program_options::store(boost::program_options::parse_command_line(argc, argv, options), vm);
   boost::program_options::notify(vm);
 
   if (vm.count("help")) {
@@ -46,7 +47,7 @@ int main(const int argc, const char* const* const argv) {
     return EXIT_SUCCESS;
   }
   if (vm.count("version")) {
-    std::cout << eidos::version::VersionInfo() << std::endl;
+    eidos::version::VersionInfo(std::cout);
     return EXIT_SUCCESS;
   }
 
@@ -57,6 +58,10 @@ int main(const int argc, const char* const* const argv) {
   if (vm["engine"].as<std::string>() == "memory") {
     BOOST_LOG_TRIVIAL(info) << "storage engine: memory";
     engine = std::make_shared<eidos::storage::MemoryStorageEngine<>>();
+  } else if (vm["engine"].as<std::string>() == "raft") {
+    BOOST_LOG_TRIVIAL(info) << "storage engine: raft";
+    engine = std::make_shared<eidos::storage::RaftStorageEngine>(
+        std::make_shared<eidos::storage::MemoryStorageEngine<>>(), 16379);
   } else {
     BOOST_LOG_TRIVIAL(fatal) << "unknown engine name";
     return EXIT_FAILURE;

@@ -46,7 +46,7 @@ class ResponseContext {
   template <class F>
   void err(const std::string& message, F&& on_write) {
     BOOST_LOG_TRIVIAL(trace) << "return string -ERR " << message;
-    socket_->write("-ERR " + message, std::forward<F>(on_write));
+    socket_->write("-ERR " + message + "\r\n", std::forward<F>(on_write));
   }
 
  public:

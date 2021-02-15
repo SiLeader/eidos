@@ -25,9 +25,7 @@ class MemoryStorageEngine : public StorageEngineBase {
   Allocator allocator_;
 
  public:
-  MemoryStorageEngine() : bucket_size_(1024), storage_(nullptr), allocator_() {
-    expandAndRehash();
-  }
+  MemoryStorageEngine() : bucket_size_(1024), storage_(nullptr), allocator_() { expandAndRehash(); }
 
  private:
   void expandAndRehash() {
@@ -38,13 +36,12 @@ class MemoryStorageEngine : public StorageEngineBase {
         new (storage + i) Container();
       }
     } else {
-      std::for_each(storage_, storage_ + bucket_size_,
-                    [&storage, size](const Container& c) {
-                      for (const auto& kv : c) {
-                        const auto digest = std::get<0>(kv).digest();
-                        storage[digest % size].emplace_back(kv);
-                      }
-                    });
+      std::for_each(storage_, storage_ + bucket_size_, [&storage, size](const Container& c) {
+        for (const auto& kv : c) {
+          const auto digest = std::get<0>(kv).digest();
+          storage[digest % size].emplace_back(kv);
+        }
+      });
     }
     storage_ = storage;
     bucket_size_ = size;
@@ -95,19 +92,26 @@ class MemoryStorageEngine : public StorageEngineBase {
   }
 
   Result<std::vector<Key>> keys(const std::string& pattern) override {
-    std::regex pattern_regex(
-        boost::algorithm::replace_all_copy(pattern, "*", R"(.*)"));
+    std::regex pattern_regex(boost::algorithm::replace_all_copy(pattern, "*", R"(.*)"));
     std::vector<Key> keys;
-    std::for_each(storage_, storage_ + bucket_size_,
-                  [&pattern_regex, &keys](const Container& c) {
-                    for (const auto& [key, value] : c) {
-                      if (std::regex_match(eidos::BytesToString(key.bytes()),
-                                           pattern_regex)) {
-                        keys.emplace_back(key);
-                      }
-                    }
-                  });
+    std::for_each(storage_, storage_ + bucket_size_, [&pattern_regex, &keys](const Container& c) {
+      for (const auto& [key, value] : c) {
+        if (std::regex_match(eidos::BytesToString(key.bytes()), pattern_regex)) {
+          keys.emplace_back(key);
+        }
+      }
+    });
     return Result<std::vector<Key>>::Ok(keys);
+  }
+
+  Result<std::vector<std::tuple<Key, Value>>> dump() override {
+    std::vector<std::tuple<Key, Value>> kvps;
+    std::for_each(storage_, storage_ + bucket_size_, [&kvps](const Container& c) {
+      for (const auto& kv : c) {
+        kvps.emplace_back(kv);
+      }
+    });
+    return Result<std::vector<std::tuple<Key, Value>>>::Ok(kvps);
   }
 };
 

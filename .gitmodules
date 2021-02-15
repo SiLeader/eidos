@@ -1,3 +1,6 @@
 [submodule "cmake/DownloadProject"]
 	path = cmake/DownloadProject
 	url = https://github.com/Crascit/DownloadProject.git
+[submodule "third_party/NuRaft"]
+	path = third_party/NuRaft
+	url = https://github.com/eBay/NuRaft.git
