@@ -5,8 +5,13 @@
 #pragma once
 
 #include <boost/log/trivial.hpp>
-#include <libnuraft/nuraft.hxx>
 #include <random>
+
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+#pragma GCC diagnostic ignored "-Wimplicit-int-conversion"
+#include <libnuraft/nuraft.hxx>
+#pragma GCC diagnostic warning "-Wimplicit-int-conversion"
+#pragma GCC diagnostic warning "-Wunused-parameter"
 
 #include "storage_base.hpp"
 
@@ -187,8 +192,10 @@ class InMemoryLogStore : public nuraft::log_store {
   nuraft::ptr<nuraft::buffer> pack(nuraft::ulong index, nuraft::int32 cnt) override {
     std::vector<nuraft::ptr<nuraft::buffer>> logs;
 
+    const auto count = static_cast<std::size_t>(cnt);
+
     size_t size_total = 0;
-    for (nuraft::ulong ii = index; ii < index + cnt; ++ii) {
+    for (nuraft::ulong ii = index; ii < index + count; ++ii) {
       nuraft::ptr<nuraft::log_entry> le;
       {
         std::lock_guard lg(logs_lock_);
@@ -200,8 +207,7 @@ class InMemoryLogStore : public nuraft::log_store {
       logs.push_back(buf);
     }
 
-    nuraft::ptr<nuraft::buffer> buf_out =
-        nuraft::buffer::alloc(sizeof(nuraft::int32) + cnt * sizeof(nuraft::int32) + size_total);
+    auto buf_out = nuraft::buffer::alloc(sizeof(nuraft::int32) + count * sizeof(nuraft::int32) + size_total);
     buf_out->pos(0);
     buf_out->put((nuraft::int32)cnt);
 
@@ -215,11 +221,11 @@ class InMemoryLogStore : public nuraft::log_store {
 
   void apply_pack(nuraft::ulong index, nuraft::buffer& pack) override {
     pack.pos(0);
-    nuraft::int32 num_logs = pack.get_int();
+    const auto num_logs = static_cast<std::size_t>(pack.get_int());
 
-    for (nuraft::int32 ii = 0; ii < num_logs; ++ii) {
-      nuraft::ulong cur_idx = index + ii;
-      nuraft::int32 buf_size = pack.get_int();
+    for (std::size_t ii = 0; ii < num_logs; ++ii) {
+      const auto cur_idx = index + ii;
+      const auto buf_size = static_cast<std::size_t>(pack.get_int());
 
       nuraft::ptr<nuraft::buffer> buf_local = nuraft::buffer::alloc(buf_size);
       pack.get(buf_local);
@@ -376,7 +382,7 @@ class StateMachine : public nuraft::state_machine {
       case 4:  // EXISTS
       case 5:  // KEYS
       default:
-        BOOST_LOG_TRIVIAL(trace) << "do commit: other: " << instruction;
+        BOOST_LOG_TRIVIAL(error) << "unknown commit instruction: other: " << instruction;
         break;
     }
   }

@@ -31,10 +31,10 @@ void StreamHelp(std::ostream& os, const char* program) {
 int main(const int argc, const char* const* const argv) {
   using boost::program_options::value;
   boost::program_options::options_description options("eidos");
-  options.add_options()                                             // options
-      ("help,h", "show help")                                       // --help, -h: help
-      ("version,v", "show version")                                 // --version, -v: version
-      ("port,p", value<int>()->default_value(6379), "port number")  // port
+  options.add_options()                                                       // options
+      ("help,h", "show help")                                                 // --help, -h: help
+      ("version,v", "show version")                                           // --version, -v: version
+      ("port,p", value<std::uint16_t>()->default_value(6379), "port number")  // port
       ("engine", value<std::string>()->default_value("memory"),
        "storage engine (memory)")  //
       ;
@@ -66,7 +66,7 @@ int main(const int argc, const char* const* const argv) {
     BOOST_LOG_TRIVIAL(fatal) << "unknown engine name";
     return EXIT_FAILURE;
   }
-  eidos::Serve(ioc, vm["port"].as<int>(), engine);
+  eidos::Serve(ioc, vm["port"].as<std::uint16_t>(), engine);
   ioc.run();
   return 0;
 }

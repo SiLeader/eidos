@@ -3,7 +3,6 @@ project(eidos)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_EXTENSIONS OFF)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread -Wall -Wextra")
 
 include(CTest)
 
@@ -42,6 +41,18 @@ add_executable(eidos
         src/tcp.hpp
         include/eidos/version.hpp
         src/storage/raft.hpp)
+target_compile_options(eidos PRIVATE
+        -pthread
+        -Wall -Wextra -Weffc++
+        -Wformat=2 -Wcast-qual -Wcast-align -Wstrict-aliasing=2 -Wbad-function-cast -Wwrite-strings -Wconversion
+        -Wfloat-equal -Wpointer-arith -Winit-self -Wredundant-decls -Wdeclaration-after-statement)
+if (${ADDSAN})
+    target_compile_options(eidos PRIVATE -fsanitize=address,undefined -g)
+    target_link_options(eidos PRIVATE -fsanitize=address,undefined -g)
+elseif (${MEMSAN})
+    target_compile_options(eidos PRIVATE -fsanitize=memory,undefined -g)
+    target_link_options(eidos PRIVATE -fsanitize=memory,undefined -g)
+endif ()
 target_include_directories(eidos
         PRIVATE
         "${Boost_INCLUDE_DIRS}"
