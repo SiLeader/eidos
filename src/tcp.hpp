@@ -1,6 +1,16 @@
+// Copyright 2021 SiLeader and Cerussite.
 //
-// Created by MiyaMoto on 2021/02/13.
+// Licensed under the Apache License, Version 2.0 (the “License”);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
 //
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an “AS IS” BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 #pragma once
 
@@ -12,6 +22,7 @@
 
 namespace eidos::net::tcp {
 
+/// TCP socket wrapper
 class Socket {
  private:
   boost::asio::ip::tcp::socket socket_;
@@ -21,9 +32,15 @@ class Socket {
   explicit Socket(boost::asio::io_context& ioc) : socket_(ioc) {}
 
  public:
+  /// socket getter
+  /// \return reference of socket
   [[nodiscard]] boost::asio::ip::tcp::socket& socket() { return socket_; }
 
  public:
+  /// read bytes until pattern appeared
+  /// \tparam F read event callback type
+  /// \param pattern pattern
+  /// \param on_read read event handler
   template <class F>
   void readBytes(const std::string& pattern, F&& on_read) {
     const auto endpoint = socket_.remote_endpoint();
@@ -47,6 +64,10 @@ class Socket {
         });
   }
 
+  /// read [length] bytes
+  /// \tparam F read event callback type
+  /// \param length bytes length
+  /// \param on_read read event handler
   template <class F>
   void readBytes(std::size_t length, F&& on_read) {
     const auto endpoint = socket_.remote_endpoint();
@@ -69,12 +90,17 @@ class Socket {
     };
 
     if (buffer_.size() >= length) {
+      // already read
       callback(boost::system::error_code{}, length);
       return;
     }
     boost::asio::async_read(socket_, buffer_, boost::asio::transfer_exactly(length), callback);
   }
 
+  /// read string until patter appeared
+  /// \tparam F read event callback type
+  /// \param pattern pattern
+  /// \param on_read read event handler
   template <class F>
   void readString(const std::string& pattern, F&& on_read) {
     const auto endpoint = socket_.remote_endpoint();
@@ -99,6 +125,10 @@ class Socket {
   }
 
  public:
+  /// write to socket
+  /// \tparam F wrote event handler type
+  /// \param s value to write
+  /// \param on_write wrote event handler
   template <class F>
   void write(const std::string& s, F&& on_write) {
     const auto endpoint = socket_.remote_endpoint();
@@ -116,6 +146,7 @@ class Socket {
   }
 };
 
+/// TCP server (acceptor)
 class Server {
  private:
   boost::asio::io_context& ioc_;
@@ -127,6 +158,7 @@ class Server {
       : ioc_(ioc), acceptor_(ioc, ep) {}
 
  private:
+  /// start accept socket
   void accept() {
     auto sock = std::make_shared<Socket>(ioc_);
     acceptor_.async_accept(sock->socket(), [this, sock](const boost::system::error_code&) {
@@ -138,6 +170,9 @@ class Server {
   }
 
  public:
+  /// start listen
+  /// \tparam F on accept event handler type
+  /// \param on_accept on accept event handler
   template <class F>
   void listen(F&& on_accept) {
     on_accept_ = std::forward<F>(on_accept);

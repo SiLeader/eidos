@@ -1,9 +1,18 @@
+// Copyright 2021 SiLeader and Cerussite.
 //
-// Created by MiyaMoto on 2021/02/13.
+// Licensed under the Apache License, Version 2.0 (the “License”);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
 //
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an “AS IS” BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
-#ifndef EIDOS_REQUEST_HPP
-#define EIDOS_REQUEST_HPP
+#pragma once
 
 #include <cstddef>
 #include <cstdint>
@@ -16,6 +25,14 @@
 
 namespace eidos {
 
+/// request received event callback function.
+/// process Redis command.
+/// \tparam F response wrote event callback function type
+/// \param engine storage engine
+/// \param res response context
+/// \param cmd command name
+/// \param args command arguments
+/// \param callback response wrote event callback function
 template <class F>
 void OnRequest(const std::shared_ptr<eidos::storage::StorageEngineBase>& engine,
                const std::shared_ptr<ResponseContext>& res, const std::string& cmd,
@@ -33,12 +50,14 @@ void OnRequest(const std::shared_ptr<eidos::storage::StorageEngineBase>& engine,
   using eidos::Key;
   using eidos::Value;
 
+  // compute hash
   const auto calculate_digest = [](const std::vector<std::byte>& k) -> std::uint_fast64_t {
     return std::hash<std::string>{}(eidos::BytesToString(k));
   };
 
   BOOST_LOG_TRIVIAL(trace) << "command '" << cmd << "' received";
   if (cmd == "GET") {
+    // GET key
     ARGS_LENGTH_ASSERT(1);
 
     Key key(args[0], calculate_digest(args[0]));
@@ -53,6 +72,7 @@ void OnRequest(const std::shared_ptr<eidos::storage::StorageEngineBase>& engine,
     return;
 
   } else if (cmd == "SET") {
+    // SET key value
     ARGS_LENGTH_ASSERT(2);
 
     Key key(args[0], calculate_digest(args[0]));
@@ -67,6 +87,7 @@ void OnRequest(const std::shared_ptr<eidos::storage::StorageEngineBase>& engine,
     return;
 
   } else if (cmd == "EXISTS") {
+    // EXISTS key
     ARGS_LENGTH_ASSERT(1);
 
     Key key(args[0], calculate_digest(args[0]));
@@ -80,6 +101,7 @@ void OnRequest(const std::shared_ptr<eidos::storage::StorageEngineBase>& engine,
     return;
 
   } else if (cmd == "DEL") {
+    // DEL key
     ARGS_LENGTH_ASSERT(1);
 
     Key key(args[0], calculate_digest(args[0]));
@@ -93,6 +115,7 @@ void OnRequest(const std::shared_ptr<eidos::storage::StorageEngineBase>& engine,
     return;
 
   } else if (cmd == "KEYS") {
+    // KEYS pattern
     ARGS_LENGTH_ASSERT(1);
 
     auto pattern = eidos::BytesToString(args[0]);
@@ -109,6 +132,8 @@ void OnRequest(const std::shared_ptr<eidos::storage::StorageEngineBase>& engine,
     res->err(err, std::forward<F>(callback));
     return;
   } else if (cmd == "COMMAND") {
+    // COMMAND
+    // redis-cli send this command before any commands
     static constexpr char NL[] = "\r\n";
     std::stringstream ss;
     ss << "*5" << NL         //
@@ -167,5 +192,3 @@ void OnRequest(const std::shared_ptr<eidos::storage::StorageEngineBase>& engine,
 }
 
 }  // namespace eidos
-
-#endif  // EIDOS_REQUEST_HPP

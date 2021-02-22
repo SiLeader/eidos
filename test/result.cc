@@ -1,6 +1,16 @@
+// Copyright 2021 SiLeader and Cerussite.
 //
-// Created by cerussite on 2/9/21.
+// Licensed under the Apache License, Version 2.0 (the “License”);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
 //
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an “AS IS” BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 #include <gtest/gtest.h>
 
@@ -38,16 +48,14 @@ TEST(EidosResult, Err_unwrap_or) {
 
 TEST(EidosResult, Ok_unwrap_or_else) {
   const auto res = eidos::result::Result<int, std::string>::Ok(0);
-  EXPECT_EQ(res.unwrap_or_else([](const std::string& s) { return s.size(); }),
-            0);
+  EXPECT_EQ(res.unwrap_or_else([](const std::string& s) { return s.size(); }), 0);
 }
 
 TEST(EidosResult, Err_unwrap_or_else) {
   using namespace std::string_literals;
   const auto err = "error"s;
   const auto res = eidos::result::Result<int, std::string>::Err(err);
-  EXPECT_EQ(res.unwrap_or_else([](const std::string& s) { return s.size(); }),
-            err.size());
+  EXPECT_EQ(res.unwrap_or_else([](const std::string& s) { return s.size(); }), err.size());
 }
 
 TEST(EidosResult, Ok_expect) {

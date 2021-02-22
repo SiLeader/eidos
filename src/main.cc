@@ -1,3 +1,17 @@
+// Copyright 2021 SiLeader and Cerussite.
+//
+// Licensed under the Apache License, Version 2.0 (the “License”);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an “AS IS” BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 #include <boost/log/trivial.hpp>
 #include <boost/program_options.hpp>
 #include <eidos/version.hpp>
@@ -9,6 +23,9 @@
 
 namespace {
 
+/// output help message to stream
+/// \param os output stream
+/// \param program program name (argv[0])
 void StreamHelp(std::ostream& os, const char* program) {
   os << "usage: " << program << " [-hv] [--engine ENGINE] [--port PORT]\n"  //
      << "\n"                                                                //
@@ -20,7 +37,6 @@ void StreamHelp(std::ostream& os, const char* program) {
      << "\n"                                                                //
      << "storage engine\n"                                                  //
      << "  memory    : use program heap memory as data storage.\n"          //
-     << "  directory : use directory style engine. (not implemented)\n"     //
      << "  raft      : use Raft replicated in-memory storage\n"             //
      << "\n"                                                                //
      << "published under Apache License 2.0" << std::endl;
@@ -29,6 +45,7 @@ void StreamHelp(std::ostream& os, const char* program) {
 }  // namespace
 
 int main(const int argc, const char* const* const argv) {
+  // parsing command line arguments
   using boost::program_options::value;
   boost::program_options::options_description options("eidos");
   options.add_options()                                                       // options
@@ -51,6 +68,7 @@ int main(const int argc, const char* const* const argv) {
     return EXIT_SUCCESS;
   }
 
+  // start server
   BOOST_LOG_TRIVIAL(info) << "starting eidos server";
 
   boost::asio::io_context ioc;
@@ -66,6 +84,8 @@ int main(const int argc, const char* const* const argv) {
     BOOST_LOG_TRIVIAL(fatal) << "unknown engine name";
     return EXIT_FAILURE;
   }
+
+  // start listen and serve
   eidos::Serve(ioc, vm["port"].as<std::uint16_t>(), engine);
   ioc.run();
   return 0;

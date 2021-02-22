@@ -1,6 +1,16 @@
+// Copyright 2021 SiLeader and Cerussite.
 //
-// Created by cerussite on 2/9/21.
+// Licensed under the Apache License, Version 2.0 (the “License”);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
 //
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an “AS IS” BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 #pragma once
 
@@ -14,6 +24,8 @@
 
 namespace eidos::storage {
 
+/// In-memory storage engine
+/// \tparam Allocator memory allocator
 template <class Allocator = std::allocator<std::list<std::tuple<Key, Value>>>>
 class MemoryStorageEngine : public StorageEngineBase {
  private:
@@ -25,23 +37,35 @@ class MemoryStorageEngine : public StorageEngineBase {
   Allocator allocator_;
 
  public:
-  MemoryStorageEngine() : bucket_size_(1024), storage_(nullptr), allocator_() { expandAndRehash(); }
+  MemoryStorageEngine() : bucket_size_(1024), storage_(nullptr), allocator_() { extendAndRearrange(); }
+
+  ~MemoryStorageEngine() override {
+    for (auto itr = storage_; itr != storage_ + bucket_size_; ++itr) {
+      itr->~Container();
+    }
+    allocator_.deallocate(storage_, bucket_size_);
+  }
 
  private:
-  void expandAndRehash() {
+  /// extend the bucket and rearrange the values
+  void extendAndRearrange() {
     const auto size = bucket_size_ * 2;
     Container* const storage = allocator_.allocate(size);
     if (storage_ == nullptr) {
+      // storage not initialized
       for (std::size_t i = 0; i < size; ++i) {
         new (storage + i) Container();
       }
     } else {
-      std::for_each(storage_, storage_ + bucket_size_, [&storage, size](const Container& c) {
-        for (const auto& kv : c) {
+      // rearrange
+      for (auto itr = storage_; itr != storage_ + bucket_size_; ++itr) {
+        for (const auto& kv : *itr) {
           const auto digest = std::get<0>(kv).digest();
           storage[digest % size].emplace_back(kv);
         }
-      });
+        itr->~Container();
+      }
+      allocator_.deallocate(storage_, bucket_size_);
     }
     storage_ = storage;
     bucket_size_ = size;

@@ -1,3 +1,17 @@
+# Copyright 2021 SiLeader and Cerussite.
+#
+# Licensed under the Apache License, Version 2.0 (the “License”);
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an “AS IS” BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 cmake_minimum_required(VERSION 3.10)
 project(eidos)
 
@@ -41,11 +55,13 @@ add_executable(eidos
         src/tcp.hpp
         include/eidos/version.hpp
         src/storage/raft.hpp)
+
 target_compile_options(eidos PRIVATE
         -pthread
         -Wall -Wextra -Weffc++
         -Wformat=2 -Wcast-qual -Wcast-align -Wstrict-aliasing=2 -Wbad-function-cast -Wwrite-strings -Wconversion
         -Wfloat-equal -Wpointer-arith -Winit-self -Wredundant-decls -Wdeclaration-after-statement)
+
 if (${ADDSAN})
     target_compile_options(eidos PRIVATE -fsanitize=address,undefined -g)
     target_link_options(eidos PRIVATE -fsanitize=address,undefined -g)
@@ -53,6 +69,7 @@ elseif (${MEMSAN})
     target_compile_options(eidos PRIVATE -fsanitize=memory,undefined -g)
     target_link_options(eidos PRIVATE -fsanitize=memory,undefined -g)
 endif ()
+
 target_include_directories(eidos
         PRIVATE
         "${Boost_INCLUDE_DIRS}"
@@ -66,7 +83,7 @@ target_link_libraries(eidos
         static_lib)
 
 # test
-add_executable(e-test test/result.cc src/storage/dirstore.hpp src/storage/raft.hpp)
+add_executable(e-test test/result.cc src/storage/raft.hpp)
 target_link_libraries(e-test gtest gmock_main)
 target_include_directories(e-test PRIVATE "${PROJECT_SOURCE_DIR}/include" "${gtest_SOURCE_DIR}/include" "${gmock_SOURCE_DIR}/include")
 add_test(NAME eidos-test COMMAND e-test)
