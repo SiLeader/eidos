@@ -61,6 +61,7 @@ inline void VersionInfo(std::ostream& os) {
 #else
   os << "os: Unknown";
 #endif
+  os << std::endl;
 }
 
 }  // namespace eidos::version

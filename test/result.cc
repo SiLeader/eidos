@@ -77,8 +77,3 @@ TEST(EidosResult, Err_unwrap) {
   const auto res = eidos::result::Result<int, std::string>::Err("error");
   EXPECT_THROW(res.unwrap(), eidos::result::PanicError);
 }
-
-TEST(EidosResult, Err_unwrap_int) {
-  const auto res = eidos::result::Result<int, int>::Err(1);
-  EXPECT_THROW(res.unwrap(), eidos::result::PanicError);
-}
